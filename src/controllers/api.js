@@ -1,0 +1,4 @@
+import { inspect,compile,pluginGenerate,configGenerate,guiGenerate,spriteGenerate } from '../services/core.js';
+export const health=(req,res)=>res.json({success:true,message:'Operation completed',data:{status:'ok',service:'AstraUtilities API'}});
+export function uploadController(mode){return async(req,res,next)=>{try{if(!req.file)throw Error('Select a valid ZIP file under 12 MB.');const data=mode==='compiler'?await compile(req.file.buffer):(await inspect(req.file.buffer,mode)).data;res.json({success:true,message:'Operation completed',data});}catch(e){next(e)}}}
+export function generatorController(kind){const generators={plugin:pluginGenerate,config:configGenerate,gui:guiGenerate,sprite:spriteGenerate};return(req,res,next)=>{try{const data=generators[kind](req.body||{});res.json({success:true,message:'Operation completed',data})}catch(e){next(e)}}}

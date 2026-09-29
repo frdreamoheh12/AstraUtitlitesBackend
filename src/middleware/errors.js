@@ -1,0 +1,1 @@
+export function errorHandler(err,req,res,next){const message=err.code==='LIMIT_FILE_SIZE'?'File exceeds the 12 MB limit.':err.type==='entity.too.large'?'Request exceeds the size limit.':err.message||'Something went wrong.';res.status(err.status||400).json({success:false,message});}

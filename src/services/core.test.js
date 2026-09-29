@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import JSZip from 'jszip';
+import YAML from 'yaml';
+import { inspect,pluginGenerate,guiGenerate,spriteGenerate } from './core.js';
+import {safeArchivePath} from '../utils/archive.js';
+test('inspects a Minecraft plugin archive',async()=>{const zip=new JSZip();zip.file('Demo/plugin.yml','name: Demo\napi-version: 1.21\n');zip.file('Demo/src/main/java/Demo.java','package demo; public class Demo {}');zip.file('Demo/build.gradle',"plugins { id 'java' }");const result=(await inspect(await zip.generateAsync({type:'nodebuffer'}))).data;assert.equal(result.projectType,'Minecraft plugin');assert.equal(result.buildSystem,'Gradle');assert.equal(result.sourceFiles,1);assert.equal(result.minecraftVersion,'1.21')});
+test('rejects invalid ZIP bytes',async()=>{await assert.rejects(()=>inspect(Buffer.from('not a zip')),/valid ZIP/)});
+test('rejects unsafe archive paths',()=>{assert.equal(safeArchivePath('../secret'),false);assert.equal(safeArchivePath('/etc/passwd'),false);assert.equal(safeArchivePath('assets/minecraft/item.json'),true)});
+test('generates parseable plugin and GUI YAML',()=>{const plugin=pluginGenerate({name:'Demo',version:'1.0',main:'dev.demo.Demo'});assert.equal(YAML.parse(plugin.content).main,'dev.demo.Demo');const gui=guiGenerate({size:9,items:[{slot:0,material:'STONE',name:'Test'}]});assert.equal(YAML.parse(gui.content).menu.items.slot_0.material,'STONE')});
+test('validates model namespace',()=>{assert.throws(()=>spriteGenerate({namespace:'../wrong'}),/Invalid namespace/)});
